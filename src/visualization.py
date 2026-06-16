@@ -8,6 +8,7 @@ import pandas as pd
 import seaborn as sns
 from sklearn.metrics import (
     average_precision_score,
+    confusion_matrix,
     f1_score,
     precision_recall_curve,
     precision_score,
@@ -418,4 +419,44 @@ def plot_master_comparison(
     table.scale(1, 1.2)
 
     plt.subplots_adjust(bottom=0.35)
+    _save_or_show(fig, save_path)
+
+
+def plot_confusion_matrix(
+    y_true,
+    y_pred,
+    model_name: str,
+    save_path: Optional[str] = None,
+    figsize: tuple = (6, 5),
+) -> None:
+    """
+    Plot a confusion matrix heatmap for Dead (0) vs Alive (1) predictions.
+    Annotates cell counts and highlights false negatives in the title.
+    """
+    plt.style.use(STYLE)
+    fig, ax = plt.subplots(figsize=figsize)
+
+    y_true_arr = np.asarray(y_true)
+    y_pred_arr = np.asarray(y_pred)
+    cm = confusion_matrix(y_true_arr, y_pred_arr, labels=[0, 1])
+
+    sns.heatmap(
+        cm,
+        annot=True,
+        fmt="d",
+        cmap="Blues",
+        xticklabels=["Pred Dead", "Pred Alive"],
+        yticklabels=["True Dead", "True Alive"],
+        ax=ax,
+        cbar_kws={"label": "Count"},
+    )
+
+    false_negatives = int(cm[0, 1])
+    ax.set_title(
+        f"Confusion matrix — {model_name}\n"
+        f"False negatives (Dead missed): {false_negatives}"
+    )
+    ax.set_xlabel("Predicted label")
+    ax.set_ylabel("True label")
+
     _save_or_show(fig, save_path)
